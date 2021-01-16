@@ -113,12 +113,12 @@ nav.addEventListener('mouseout', function (e) {
 
 //! Sticky navigation
 
-const header = document.querySelector('header');
+const header = document.querySelector('.header');
 const navHeight = nav.getBoundingClientRect().height;
 
 const stickyNav = function (entries) {
   const [entry] = entries;
-  console.log(entry);
+  // console.log(entry);
 
   if (!entry.isIntersecting) {
     nav.classList.add('sticky');
@@ -129,12 +129,37 @@ const stickyNav = function (entries) {
 
 const headerObserver = new IntersectionObserver(stickyNav, {
   root: null,
-  // Viewport
   threshold: 0,
-  // When header get out of viewport.
+  // Percentage of visible part compare to viewport.
   rootMargin: `-${navHeight}px`,
 });
+
 headerObserver.observe(header);
+
+//! Reveal section
+
+const allSections = document.querySelectorAll('.section');
+
+const revealSection = function (entries, observer) {
+  const [entry] = entries;
+  console.log(entry);
+  if (!entry.isIntersecting) return;
+
+  entry.target.classList.remove('section--hidden');
+
+  // Once we remove class, No loneger need to keep watcing
+  observer.unobserve(entry.target);
+};
+
+const sectionObserver = new IntersectionObserver(revealSection, {
+  root: null,
+  threshold: 0.2,
+});
+
+allSections.forEach(function (section) {
+  sectionObserver.observe(section);
+  section.classList.add('section--hidden');
+});
 
 //? Bad practice
 // const initialCoords = section1.getBoundingClientRect();
