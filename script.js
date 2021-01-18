@@ -111,7 +111,7 @@ nav.addEventListener('mouseout', function (e) {
   handleHover(e, 1);
 });
 
-//! Sticky navigation
+//! Sticky navigation - intersection api
 
 const header = document.querySelector('.header');
 const navHeight = nav.getBoundingClientRect().height;
@@ -136,13 +136,13 @@ const headerObserver = new IntersectionObserver(stickyNav, {
 
 headerObserver.observe(header);
 
-//! Reveal section
+//! Reveal section - intersection api
 
 const allSections = document.querySelectorAll('.section');
 
 const revealSection = function (entries, observer) {
   const [entry] = entries;
-  console.log(entry);
+  // console.log(entry);
   if (!entry.isIntersecting) return;
 
   entry.target.classList.remove('section--hidden');
@@ -157,9 +157,76 @@ const sectionObserver = new IntersectionObserver(revealSection, {
 });
 
 allSections.forEach(function (section) {
+  // section.classList.add('section--hidden');
   sectionObserver.observe(section);
-  section.classList.add('section--hidden');
 });
+
+//! Lazy loading - intersection api
+// Load low resolution image first for perfomance
+// then when we hit the page, change it to high resolution
+
+const imgTargets = document.querySelectorAll('img[data-src]');
+// Image tags which has data-src attribute
+
+const loadImg = function (entries, observer) {
+  const [entry] = entries;
+  // console.log(entry);
+
+  if (!entry.isIntersecting) return;
+
+  entry.target.src = entry.target.dataset.src;
+
+  entry.target.addEventListener('load', () => {
+    entry.target.classList.remove('lazy-img');
+  });
+
+  observer.unobserve(entry.target);
+};
+
+const imgObserver = new IntersectionObserver(loadImg, {
+  root: null,
+  threshold: 0,
+  rootMargin: '-200px',
+});
+
+imgTargets.forEach(img => imgObserver.observe(img));
+
+//! Image Slider
+
+const slides = document.querySelectorAll('.slide');
+const btnLeft = document.querySelector('.slider__btn--left');
+const btnRight = document.querySelector('.slider__btn--right');
+let curSlice = 0;
+const maxSlide = slides.length; // 4
+
+// const slider = document.querySelector('.slider');
+// slider.style.transform = 'scale(.5) translateX(-900px)';
+// slider.style.overflow = 'visible';
+
+const goToSlide = function (slide) {
+  slides.forEach(
+    (s, i) => (s.style.transform = `translateX(${100 * (i - slide)}%)`)
+  );
+};
+
+goToSlide(0);
+// 0%, 100%, 200%, 300%
+
+const nextSlide = function () {
+  curSlice++;
+  if (curSlice === maxSlide) curSlice = 0;
+  goToSlide(curSlice);
+};
+
+const prevSlide = function () {
+  curSlice--;
+  if (curSlice === -1) curSlice = maxSlide - 1;
+  goToSlide(curSlice);
+};
+
+// next slide
+btnRight.addEventListener('click', nextSlide);
+btnLeft.addEventListener('click', prevSlide);
 
 //? Bad practice
 // const initialCoords = section1.getBoundingClientRect();
