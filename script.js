@@ -166,7 +166,7 @@ allSections.forEach(function (section) {
 // then when we hit the page, change it to high resolution
 
 const imgTargets = document.querySelectorAll('img[data-src]');
-// Image tags which has data-src attribute
+// Image tags which contain a data-src attribute
 
 const loadImg = function (entries, observer) {
   const [entry] = entries;
@@ -193,70 +193,109 @@ imgTargets.forEach(img => imgObserver.observe(img));
 
 //! Image Slider
 
-const slides = document.querySelectorAll('.slide');
-const btnLeft = document.querySelector('.slider__btn--left');
-const btnRight = document.querySelector('.slider__btn--right');
-let curSlice = 0;
-const maxSlide = slides.length; // 4
+const sliders = function () {
+  const slides = document.querySelectorAll('.slide');
+  const btnLeft = document.querySelector('.slider__btn--left');
+  const btnRight = document.querySelector('.slider__btn--right');
+  const dotContainer = document.querySelector('.dots');
+  let curSlice = 0;
+  const maxSlide = slides.length; // 4
 
-// const slider = document.querySelector('.slider');
-// slider.style.transform = 'scale(.5) translateX(-900px)';
-// slider.style.overflow = 'visible';
+  //! Image slider / function
 
-const goToSlide = function (slide) {
-  slides.forEach(
-    (s, i) => (s.style.transform = `translateX(${100 * (i - slide)}%)`)
-  );
+  // init()
+  // 1. 각 slide의 x포지션을 조정한다. -> goToSlide(0)
+  // 2. 슬라이드의 dots을 생성한다.    -> createDots()
+  // 3. 현재 슬라이드의 dot을 표시한다.-> activateDot(0)
+
+  // goToSlide()
+  // 1. 모든 slide들을 선택한다.
+  // 2. 각 slide에게 forEach loop을 돌려서 위치를 조정시킨다.
+  // 3. 변수를 통해서 각 slide의 위치를 정한다.
+  // 4. 변수는 curSlide로 0부터 (slides.length-1)까지 이다.
+
+  // createDots()
+  // 1. 모든 slide들을 선택한다.
+  // 2. 각 slide에 slides.length 만큼의 dot을 DOM을 통해서 집어넣는다.
+  // 3. 각 dot에다가 data값을 설정한다.
+
+  // activateDot()
+  // 1. 모든 slide에서 active클래스를 제거한다.
+  // 2. 매개변수 혹은 curSlide를 통해서 현재 slide를 확인 후 실행
+
+  // Attach dots to each slide
+  const createDots = function () {
+    slides.forEach(function (_, i) {
+      dotContainer.insertAdjacentHTML(
+        'beforeend',
+        `
+    <button class="dots__dot" data-slide="${i}"></button>
+    `
+      );
+    });
+  };
+
+  const activateDot = function (slide) {
+    document.querySelectorAll('.dots__dot').forEach(dot => {
+      dot.classList.remove('dots__dot--active');
+    });
+
+    document
+      .querySelector(`.dots__dot[data-slide="${slide}"]`)
+      .classList.add('dots__dot--active');
+  };
+
+  const goToSlide = function (slide) {
+    slides.forEach(
+      (s, i) => (s.style.transform = `translateX(${100 * (i - slide)}%)`)
+    );
+  };
+
+  const nextSlide = function () {
+    curSlice++;
+    if (curSlice === maxSlide) curSlice = 0;
+    goToSlide(curSlice);
+    activateDot(curSlice);
+  };
+
+  const prevSlide = function () {
+    curSlice--;
+    if (curSlice === -1) curSlice = maxSlide - 1;
+    goToSlide(curSlice);
+    activateDot(curSlice);
+  };
+
+  const init = function () {
+    goToSlide(0);
+    // 0%, 100%, 200%, 300%
+    createDots();
+    activateDot(0);
+  };
+
+  init();
+
+  //! Image slider / event handler
+
+  btnRight.addEventListener('click', nextSlide);
+  btnLeft.addEventListener('click', prevSlide);
+
+  document.addEventListener('keydown', function (e) {
+    if (e.keyCode === 39) nextSlide();
+    e.keyCode === 37 && prevSlide();
+    activateDot(curSlice);
+  });
+
+  dotContainer.addEventListener('click', function (e) {
+    if (e.target.classList.contains('dots__dot')) {
+      // const slide = e.target.dataset.slide
+      const { slide } = e.target.dataset;
+      goToSlide(slide);
+      activateDot(slide);
+    }
+  });
 };
 
-goToSlide(0);
-// 0%, 100%, 200%, 300%
-
-const nextSlide = function () {
-  curSlice++;
-  if (curSlice === maxSlide) curSlice = 0;
-  goToSlide(curSlice);
-};
-
-const prevSlide = function () {
-  curSlice--;
-  if (curSlice === -1) curSlice = maxSlide - 1;
-  goToSlide(curSlice);
-};
-
-// next slide
-btnRight.addEventListener('click', nextSlide);
-btnLeft.addEventListener('click', prevSlide);
-
-//? Bad practice
-// const initialCoords = section1.getBoundingClientRect();
-
-// window.addEventListener('scroll', function () {
-//   if (window.scrollY > initialCoords.top) {
-//     nav.classList.add('sticky');
-//   } else {
-//     nav.classList.remove('sticky');
-//   }
-// });
-
-// Better way ; intersection API
-
-// const obsCallback = function (entries, observer) {
-//   entries.forEach(entry => {
-//     console.log(entry);
-//   });
-// };
-
-// const obsOptions = {
-//   root: null, // viewport
-//   threshold: [0, 0.2], // 10%
-// };
-
-// const observer = new IntersectionObserver(obsCallback, obsOptions);
-
-// observer.observe(section1);
-
-//! Revealing animation
+sliders();
 
 //? //////////////////////////////////////////////////////
 ///? ---------------- Lecture ------------------------
@@ -571,3 +610,27 @@ btnLeft.addEventListener('click', prevSlide);
 //   if (el !== h1) el.style.transform = 'scale(0.5)';
 // });
 // // Get all the siblings of element and do something.
+
+//! DOM Life-cycle
+
+// // DOMContentLoaded
+// //: Only after HTML and JS files are parsed
+// document.addEventListener('DOMContentLoaded', function (e) {
+//   console.log('HTML PARSED AND DOM TREE BUILT', e);
+// });
+
+// // load
+// //: Only after HTML,JS,CSS and external resource are parsed.
+// window.addEventListener('load', function (e) {
+//   console.log('Page fully loaded', e);
+// });
+
+// beforeunload
+//: Just before user leave a page
+// window.addEventListener('beforeunload', function (e) {
+//   e.preventDefault();
+//   console.log(e);
+//   e.returnValue = '';
+// });
+
+//! Efficient Script loading
